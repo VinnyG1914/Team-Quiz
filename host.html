@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team Quiz – Host</title>
+<link rel="preload" href="fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="backdrop"></div>
+<div class="topbar">
+  <div class="logo">Team<span>Quiz</span></div>
+  <span id="net" class="net" hidden></span>
+  <span class="spacer"></span>
+  <button class="ghost small" id="btn-mute" title="Sound on/off">🔊</button>
+  <button class="ghost small" id="btn-full" title="Full screen">⛶</button>
+  <button class="ghost small" id="btn-end" hidden>End game</button>
+</div>
+
+<!-- Library -->
+<section class="screen" id="scr-library">
+  <div class="wrap">
+    <div id="resume-banner" class="banner" hidden></div>
+    <div class="lib-head"><h1>Your quizzes</h1></div>
+    <div class="lib-actions">
+      <button class="go" id="btn-new">+ New quiz</button>
+      <button class="ghost" id="btn-paste">📋 Paste from Claude</button>
+      <button class="ghost" id="btn-import">📂 Import file</button>
+      <button class="ghost" id="btn-prompt">🤖 Prompt for Claude</button>
+      <button class="ghost" id="btn-sample">✨ Add sample quiz</button>
+      <input type="file" id="file-import" accept=".json,.csv,.txt" hidden>
+    </div>
+    <div id="quiz-list" class="quiz-list"></div>
+    <p id="storage-warn" hidden style="color:#ffcb3d">This browser is not saving quizzes permanently. Export your quizzes before closing the tab.</p>
+  </div>
+</section>
+
+<!-- Editor -->
+<section class="screen" id="scr-editor" hidden>
+  <div class="wrap">
+    <div class="ed-head">
+      <button class="ghost" id="ed-back">← Back</button>
+      <input type="text" id="ed-title" maxlength="120" placeholder="Quiz title">
+      <button class="go" id="ed-save">Save</button>
+    </div>
+    <div class="glass theme-box">
+      <h3>Background theme</h3>
+      <div class="themes" id="ed-themes"></div>
+    </div>
+    <p style="margin:0 0 14px;opacity:.85">Tip: click an image box and press Ctrl+V to paste a picture, or drag an image file onto it.</p>
+    <div id="ed-list"></div>
+    <div class="row">
+      <button class="ghost" id="ed-add-quiz">+ Quiz question</button>
+      <button class="ghost" id="ed-add-tf">+ True / False</button>
+      <span class="spacer"></span>
+      <button class="go" id="ed-save2">Save</button>
+    </div>
+  </div>
+</section>
+
+<!-- Lobby -->
+<section class="screen lobby" id="scr-lobby" hidden>
+  <div class="pin-row">
+    <div class="card pin-card">
+      <div class="join">
+        <div class="lbl">Join at</div>
+        <div class="url" id="join-url"></div>
+        <div><button class="small primary" id="btn-copy-invite">Copy invite for Zoom chat</button></div>
+      </div>
+      <div class="pin">
+        <div class="lbl">Game PIN</div>
+        <div class="code" id="join-code">······</div>
+      </div>
+    </div>
+  </div>
+  <div class="lobby-bar">
+    <div class="pill count-pill"><span id="player-count">0</span> players</div>
+    <div class="lobby-title" id="lobby-title"></div>
+    <button class="ghost" id="lobby-back">Cancel</button>
+    <button class="go big" id="btn-start" disabled>Start</button>
+  </div>
+  <div class="settings">
+    <label><input type="checkbox" id="set-streak"> Answer streak bonus</label>
+    <label><input type="checkbox" id="set-music"> Music</label>
+    <span style="opacity:.75">Players on laptops see the questions. Phones show the shapes only.</span>
+  </div>
+  <div id="players" class="players"></div>
+  <div id="lobby-wait" class="waiting"></div>
+</section>
+
+<!-- Intro (before question 1) -->
+<section class="screen game" id="scr-intro" hidden>
+  <div class="intro">
+    <h1 id="in-title"></h1>
+    <div class="sub" id="in-sub"></div>
+    <div class="count-big" id="in-count">3</div>
+  </div>
+</section>
+
+<!-- Preview -->
+<section class="screen game" id="scr-preview" hidden>
+  <div class="host-actions"><button class="ghost small" id="pv-skip">Skip</button></div>
+  <div class="preview">
+    <div class="pill badge" id="pv-progress"></div>
+    <div class="card q-card-title" id="pv-title"></div>
+    <div class="badge-double" id="pv-double" hidden>⚡ Double points ⚡</div>
+    <div class="pbar"><div id="pv-bar"></div></div>
+  </div>
+</section>
+
+<!-- Question -->
+<section class="screen game" id="scr-question" hidden>
+  <div class="card q-card-title" id="qs-title"></div>
+  <div class="q-middle">
+    <div class="side">
+      <div class="ring" id="qs-ring">
+        <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="bar" id="qs-ring-bar" cx="60" cy="60" r="52"/></svg>
+        <div class="num" id="qs-timer">20</div>
+      </div>
+    </div>
+    <div class="q-image" id="qs-image"></div>
+    <div class="side">
+      <div class="answered"><div class="n" id="qs-count">0</div><div>Answers</div></div>
+      <button class="ghost small" id="qs-skip" style="margin-top:12px">Skip</button>
+    </div>
+  </div>
+  <div class="tiles" id="qs-tiles"></div>
+</section>
+
+<!-- Reveal -->
+<section class="screen game" id="scr-reveal" hidden>
+  <div class="card q-card-title" id="rv-title"></div>
+  <div class="host-actions"><button class="primary" id="rv-next">Next</button></div>
+  <div class="q-middle"><div class="q-image" id="rv-chart"></div></div>
+  <div class="facts" id="rv-facts"></div>
+  <div class="tiles" id="rv-tiles"></div>
+</section>
+
+<!-- Scoreboard -->
+<section class="screen game" id="scr-scoreboard" hidden>
+  <div class="host-actions"><button class="primary" id="sb-next">Next question</button></div>
+  <div class="center"><div class="card sb-title">Scoreboard</div></div>
+  <div class="sb-list" id="sb-list"></div>
+  <div class="sb-note" id="sb-note"></div>
+</section>
+
+<!-- Podium -->
+<section class="screen game" id="scr-podium" hidden>
+  <div class="center"><div class="card sb-title" id="pd-title">Podium</div></div>
+  <div class="podium" id="podium"></div>
+  <div class="final-list" id="final-list"></div>
+  <div class="row pd-actions" id="pd-actions">
+    <button class="ghost" id="pd-csv">⬇ Results (CSV)</button>
+    <button class="go" id="pd-again">Play again with same players</button>
+    <button class="ghost" id="pd-home">Finish</button>
+  </div>
+</section>
+
+<dialog id="dlg-paste">
+  <h2>Paste quiz from Claude</h2>
+  <p class="muted" style="margin-top:0">Paste Claude's whole reply. The quiz part is found automatically. CSV text works too.</p>
+  <textarea id="paste-text" placeholder='{ "title": "...", "questions": [ ... ] }'></textarea>
+  <div id="paste-err" class="err-text"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button id="paste-cancel">Cancel</button>
+    <button class="go" id="paste-ok">Import</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-prompt">
+  <h2>Prompt for Claude</h2>
+  <p class="muted" style="margin-top:0">Copy this into Claude, replace [TOPIC] and [NUMBER], then paste Claude's reply with “Paste from Claude”.</p>
+  <textarea id="prompt-text" readonly></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button id="prompt-close">Close</button>
+    <button class="go" id="prompt-copy">Copy</button>
+  </div>
+</dialog>
+
+<script src="js/vendor/peerjs.min.js"></script>
+<script src="js/link.js"></script>
+<script src="js/config.js"></script>
+<script src="js/avatars.js"></script>
+<script src="js/common.js"></script>
+<script src="js/store.js"></script>
+<script src="js/sample.js"></script>
+<script src="js/host.js"></script>
+</body>
+</html>
